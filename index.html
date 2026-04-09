@@ -11,6 +11,10 @@
             box-sizing: border-box;
         }
 
+        [x-cloak] {
+            display: none !important;
+        }
+
         .user-link:hover {
             text-decoration: underline;
         }
@@ -63,9 +67,9 @@
     </style>
 </head>
 
-<body x-data="app()" x-init="fetchData(); setInterval(() => fetchData(), 4000)" @contextmenu.prevent
-    @keydown.window.c="if(targetUser) fetchSingle(targetUser)" @keydown.window.v="if(targetUser) viewOutput(targetUser)"
-    @keydown.window.s="if(targetUser) quickCommand('speak')" @keydown.window.a="if(targetUser) quickCommand('popup')">
+<body x-data="app()" x-init="init()" @contextmenu.prevent @keydown.window.c="if(targetUser) fetchSingle(targetUser)"
+    @keydown.window.v="if(targetUser) viewOutput(targetUser)" @keydown.window.s="if(targetUser) quickCommand('speak')"
+    @keydown.window.a="if(targetUser) quickCommand('popup')">
 
     <div x-show="!selected">
         <template x-for="user in rows" :key="user.username">
@@ -80,8 +84,8 @@
         </template>
     </div>
 
-    <div x-show="showMenu" class="context-menu" :style="`top: ${menuPos.y}px; left: ${menuPos.x}px;`" x-transition
-        @click.away="showMenu = false">
+    <div x-cloak x-show="showMenu" class="context-menu" :style="`top: ${menuPos.y}px; left: ${menuPos.x}px;`"
+        x-transition @click.away="showMenu = false">
         <div class="context-menu-item" @click="fetchSingle(targetUser); showMenu = false">
             <span>Send Custom</span> <span class="hint">C</span>
         </div>
@@ -104,12 +108,32 @@
             return {
                 rows: [],
                 selected: false,
-                url: '',
-                apiKey: '',
+                url: localStorage.getItem('supa_url'),
+                apiKey: localStorage.getItem('supa_key'),
 
                 showMenu: false,
                 menuPos: { x: 0, y: 0 },
                 targetUser: null,
+
+                init() {
+                    if (!this.url || this.url === 'null' || !this.apiKey || this.apiKey === 'null') {
+                        const u = prompt('Enter Supabase URL:');
+                        const k = prompt('Enter Supabase API Key:');
+
+                        if (!u || !k) {
+                            alert('Both URL and API Key are required!');
+                            location.reload(); 
+                        }
+
+                        this.url = u;
+                        this.apiKey = k;
+                        localStorage.setItem('supa_url', u);
+                        localStorage.setItem('supa_key', k);
+                    }
+
+                    this.fetchData();
+                    setInterval(() => this.fetchData(), 4000);
+                },
 
                 openMenu(e, user) {
                     this.targetUser = user;
