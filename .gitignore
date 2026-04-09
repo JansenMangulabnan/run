@@ -1,3 +1,3 @@
-run.bat
 bats/
-index.html
+dev/
+*.tmp

@@ -36,7 +36,9 @@
     </style>
 </head>
 
-<body x-data="app()" x-init="fetchData(); setInterval(() => fetchData(), 4000)">
+<body x-data="app()" x-init="fetchData(); setInterval(() => fetchData(), 4000)"
+    @keydown.window.c="if(targetUser) fetchSingle(targetUser)"
+    @keydown.window.v="if(targetUser) viewOutput(targetUser)">
 
     <div x-show="!selected">
         <template x-for="user in rows" :key="user.username">
