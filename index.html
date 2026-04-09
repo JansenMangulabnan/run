@@ -21,13 +21,18 @@
             background-color: #222;
             border: 1px solid #555;
             z-index: 1;
-            min-width: 150px;
+            min-width: 180px;
+            /* Slightly wider for hints */
+            box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.5);
         }
 
         .context-menu-item {
-            padding: 6px 12px;
+            padding: 8px 12px;
             cursor: pointer;
             transition: background 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         .context-menu-item:hover {
@@ -55,8 +60,17 @@
 
     <div x-show="showMenu" class="context-menu" :style="`top: ${menuPos.y}px; left: ${menuPos.x}px;`" x-transition
         @click.away="showMenu = false">
-        <div class="context-menu-item" @click="fetchSingle(targetUser); showMenu = false">Send Command</div>
-        <div class="context-menu-item" @click="viewOutput(targetUser); showMenu = false">View Output</div>
+        <div class="context-menu-item" @click="fetchSingle(targetUser); showMenu = false">
+            <span>Send Command</span>
+            <span
+                style="color: #888; font-size: 0.9em; padding: 1px 5px; background-color: #444; border-radius: 3px;">C</span>
+        </div>
+        <div class="context-menu-item" @click="viewOutput(targetUser); showMenu = false">
+            <span>View Output</span>
+            <span
+                style="color: #888; font-size: 0.9em; padding: 1px 5px; background-color: #444; border-radius: 3px;">V</span>
+
+        </div>
     </div>
 
     <script>
