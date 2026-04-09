@@ -5,6 +5,12 @@
     <title>Status</title>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
+        * {
+            padding: 0;
+            margin: 0;
+            box-sizing: border-box;
+        }
+
         .user-link:hover {
             text-decoration: underline;
         }
@@ -14,6 +20,9 @@
             color: white;
             font-family: monospace;
             user-select: none;
+            padding: 1rem;
+
+            min-height: 100vh;
         }
 
         .context-menu {
@@ -22,12 +31,11 @@
             border: 1px solid #555;
             z-index: 1;
             min-width: 180px;
-            /* Slightly wider for hints */
             box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.5);
         }
 
         .context-menu-item {
-            padding: 8px 12px;
+            padding: 6px 12px;
             cursor: pointer;
             transition: background 0.2s;
             display: flex;
@@ -41,13 +49,13 @@
     </style>
 </head>
 
-<body x-data="app()" x-init="fetchData(); setInterval(() => fetchData(), 4000)"
+<body x-data="app()" x-init="fetchData(); setInterval(() => fetchData(), 4000)" @contextmenu.prevent
     @keydown.window.c="if(targetUser) fetchSingle(targetUser)"
     @keydown.window.v="if(targetUser) viewOutput(targetUser)">
 
     <div x-show="!selected">
         <template x-for="user in rows" :key="user.username">
-            <div style="margin-bottom: 10px;">
+            <div style="padding: 3px;">
                 <span :style="{ color: getStatusColor(user) }">●</span>
                 <small @contextmenu.prevent="openMenu($event, user)" class="user-link" style="cursor: pointer;">
                     <span x-text="user.username" style="font-weight: bold; margin-left: 5px;"></span>
