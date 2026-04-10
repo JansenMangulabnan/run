@@ -184,7 +184,7 @@
                         if (data[0]?.out) {
                             const decoded = atob(data[0].out);
                             await navigator.clipboard.writeText(decoded);
-                            alert(`Output for ${user.username}:\n\n${decoded}`);
+                            alert(`${decoded}`);
                         }
                     } catch (err) { console.error(err); }
                 },
