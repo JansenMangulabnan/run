@@ -168,14 +168,15 @@
                     const date = new Date(isoString);
                     const pad = (num) => num.toString().padStart(2, '0');
 
-                    const d = pad(date.getDate());
                     const m = pad(date.getMonth() + 1);
+                    const d = pad(date.getDate());
                     const y = date.getFullYear();
+
                     const h = pad(date.getHours());
                     const min = pad(date.getMinutes());
                     const s = pad(date.getSeconds());
 
-                    return `${d}/${m}/${y} ${h}:${min}:${s}`;
+                    return `${m}/${d}/${y} ${h}:${min}:${s}`;
                 },
 
                 get sortedRows() {
@@ -205,8 +206,11 @@
                 },
 
                 getStatusColor(user) {
-                    const diff = (new Date().getTime() - new Date(user.updated_at).getTime()) / 1000;
-                    if (diff < 20) return 'green';
+                    const now = new Date().getTime();
+                    const lastUpdate = new Date(user.updated_at).getTime();
+                    const diff = Math.abs(now - lastUpdate) / 1000;
+
+                    if (diff < 15) return 'green';
                     if (diff < 60) return 'yellow';
                     return 'red';
                 },
