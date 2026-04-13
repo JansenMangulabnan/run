@@ -1,5 +1,5 @@
-$BASE_URL = "https://dkrlxecasaxmcnssuqdr.supabase.co/rest/v1"
-$API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRrcmx4ZWNhc2F4bWNuc3N1cWRyIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTMyODEyMCwiZXhwIjoyMDkwOTA0MTIwfQ.U05G6GDmpCbxaE-inxUzIumFlRKCUbmkNdlZ8fY8XLA"
+$BASE_URL = ""
+$API_KEY = ""
 
 $h = @{
     "apikey"        = $API_KEY
