@@ -4,6 +4,7 @@
 <head>
     <title>run.exe client panel</title>
     <link rel="stylesheet" href="styles.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 
 <body>
@@ -18,8 +19,10 @@
                         </path>
                     </svg>
                 </a>
-                <span class="count-badge">online: <span id="online-count">0</span></span>
-                <span class="count-badge">total: <span id="total-count">0</span></span>
+                <div class="count-badge-container">
+                    <span class="count-badge">online: <span id="online-count">0</span></span>
+                    <span class="count-badge">total: <span id="total-count">0</span></span>
+                </div>
             </div>
         </div>
         <div class="grid" id="user-grid">
@@ -50,18 +53,18 @@
             </div>
             <div id="voice-config" style="display: flex;" class="option-column">
                 <div id="config-volume">
-                    <span class="btn-hint">VOL</span>
+                    <span class="hint">VOL</span>
                     <span id="volume-value">100%</span>
                     <input type="range" id="volume-slider" min="0" max="100" value="100" class="slider">
     
                 </div>
                 <div id="config-speed">
-                    <span class="btn-hint">SPD</span>
+                    <span class="hint">SPD</span>
                     <span id="speed-value">0</span>
                     <input type="range" id="speed-slider" min="-10" max="10" value="0" class="slider">
                 </div>
                 <div id="config-pitch">
-                    <span class="btn-hint">PIT</span>
+                    <span class="hint">PIT</span>
                     <span id="pitch-value">0</span>
                     <input type="range" id="pitch-slider" min="-10" max="10" value="0" class="slider">
                 </div>

@@ -109,15 +109,15 @@ body {
 
 .status-green {
     background: #fff;
-    box-shadow: 0 0 5px #fff;
+    box-shadow: 0 0 10px #fff;
 }
 
 .status-yellow {
-    background: #f0c040;
+    background: #bdbdbd;
 }
 
 .status-red {
-    background: #444;
+    background: #333;
 }
 
 .card-username {
@@ -387,4 +387,37 @@ body {
     padding: 100px 0;
     font-size: 14px;
     letter-spacing: 2px;
+}
+
+@media (max-width: 600px) {
+    .btn-hint {
+        display: none;
+    }
+
+    .hint {
+        font-size: 10px;
+        background: #333;
+        color: #fff;
+        padding: 2px 5px;
+        border-radius: 2px;
+    }
+
+    .popup-box {
+        min-width: 90%;
+    }
+
+    .count-badge-container {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .count-badge {
+        font-size: 10px;
+        padding: 3px 8px;
+    }
+
+    .toolbar-title {
+        font-size: 14px;
+    }
 }
