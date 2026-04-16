@@ -64,6 +64,7 @@ body {
     border: 1px solid #444;
     color: #bbb;
 }
+
 /* six seven */
 .count-badge span {
     color: #fff;
@@ -285,6 +286,7 @@ body {
     gap: 8px;
     margin-bottom: 15px;
 }
+
 .option-column {
     display: flex;
     flex-direction: column;

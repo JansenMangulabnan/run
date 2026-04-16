@@ -64,8 +64,8 @@ function renderGrid() {
 
         const showHint = index === 0;
 
-// six seven
-        
+        // six seven
+
         card.innerHTML = `
             <div class="card-header">
                 <div class="status-ring status-${status}"></div>
@@ -157,7 +157,7 @@ async function doSendPopup() {
         } else {
             const msg = formatPSString(val);
             rawCmd = `powershell -W H -C "(New-Object -Com WScript.Shell).Popup(${msg})"`;
-            
+
         }
     }
 
@@ -199,7 +199,7 @@ async function doViewOutput(user) {
         const data = await res.json();
         if (data[0]?.out) {
             const decoded = atob(data[0].out);
-            navigator.clipboard.writeText(decoded).catch(() => {});
+            navigator.clipboard.writeText(decoded).catch(() => { });
             alert(decoded);
         }
     } catch (e) {
