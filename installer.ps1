@@ -52,10 +52,16 @@ if (-not (Test-Path $runExe)) {
     exit
 }
 
-# create scheduled task
 $taskName = "WinRun"
-$quotedRunExe = "`"$runExe`""
-& schtasks /create /tn $taskName /tr $quotedRunExe /sc onlogon /rl highest /f | Out-Null
+$action = New-ScheduledTaskAction -Execute $runExe -WorkingDirectory $installDir
+$trigger = New-ScheduledTaskTrigger -AtLogOn
+$settings = New-ScheduledTaskSettingsSet `
+    -AllowStartIfOnBatteries `
+    -DontStopIfGoingOnBatteries `
+    -ExecutionTimeLimit (New-TimeSpan -Days 365)
+
+# create scheduled task
+Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger -Settings $settings -RunLevel Highest -Force | Out-Null
 
 # mark installed
 $installDir | Out-File $datFile
